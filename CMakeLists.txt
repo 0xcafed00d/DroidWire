@@ -34,3 +34,15 @@ if(WIN32)
     target_link_libraries(droidwire PRIVATE setupapi)
 endif()
 
+if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+	# Only build the example if this is the main project
+
+	add_executable(droidwire_test
+		src/test/droidwire_test.cpp
+	)
+
+	target_link_libraries(droidwire_test
+		droidwire
+	)
+
+endif()
