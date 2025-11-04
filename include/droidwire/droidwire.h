@@ -63,9 +63,6 @@ namespace DroidWire {
 		std::span<const std::byte> write(std::span<const std::byte> data);
 		std::span<std::byte> read(std::span<std::byte> buffer);
 
-		std::future<std::span<const std::byte>> writeAsync(std::span<const std::byte> data);
-		std::future<std::span<std::byte>> readAsync(std::span<std::byte> buffer);
-
 	   private:
 		bool async_ = false;
 
