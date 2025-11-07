@@ -7,13 +7,18 @@ int main(int argc, char** argv) {
 	        std::cerr << "Usage: " << argv[0] << " <serial_device>" << std::endl;
 	        return 1;
 	    } */
+
+#ifdef _WIN32
 	std::string device = "COM3";
+#else
+	std::string device = "/dev/ttyUSB0";
+#endif
 
 	DroidWire::SerialConfig config;
 	config.device = device;
-	config.baudRate = DroidWire::BaudRate::B300;
-	config.timeout = std::chrono::milliseconds(2000);
-	config.async = false;
+	config.baudRate = DroidWire::BaudRate::Baud300;
+	config.timeout = std::chrono::milliseconds(0);
+	config.async = true;
 
 	try {
 		DroidWire::SerialPort serial(config);

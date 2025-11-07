@@ -18,7 +18,7 @@
 #include <cerrno>
 #endif
 
-#ifdef __linux__
+#if defined(__linux__) && defined(BOTHER)
 // For custom baud rates on Linux using termios2
 #include <asm/termbits.h>
 #include <linux/serial.h>
@@ -35,39 +35,39 @@ namespace DroidWire {
 			return std::get<unsigned int>(setting);
 
 		switch (std::get<BaudRate>(setting)) {
-			case BaudRate::B110:
+			case BaudRate::Baud110:
 				return CBR_110;
-			case BaudRate::B300:
+			case BaudRate::Baud300:
 				return CBR_300;
-			case BaudRate::B600:
+			case BaudRate::Baud600:
 				return CBR_600;
-			case BaudRate::B1200:
+			case BaudRate::Baud1200:
 				return CBR_1200;
-			case BaudRate::B2400:
+			case BaudRate::Baud2400:
 				return CBR_2400;
-			case BaudRate::B4800:
+			case BaudRate::Baud4800:
 				return CBR_4800;
-			case BaudRate::B9600:
+			case BaudRate::Baud9600:
 				return CBR_9600;
-			case BaudRate::B14400:
+			case BaudRate::Baud14400:
 				return CBR_14400;
-			case BaudRate::B19200:
+			case BaudRate::Baud19200:
 				return CBR_19200;
-			case BaudRate::B38400:
+			case BaudRate::Baud38400:
 				return CBR_38400;
-			case BaudRate::B57600:
+			case BaudRate::Baud57600:
 				return CBR_57600;
-			case BaudRate::B115200:
+			case BaudRate::Baud115200:
 				return CBR_115200;
-			case BaudRate::B128000:
+			case BaudRate::Baud128000:
 				return CBR_128000;
-			case BaudRate::B230400:
+			case BaudRate::Baud230400:
 				return 230400;
-			case BaudRate::B256000:
+			case BaudRate::Baud256000:
 				return 256000;
-			case BaudRate::B460800:
+			case BaudRate::Baud460800:
 				return 460800;
-			case BaudRate::B921600:
+			case BaudRate::Baud921600:
 				return 921600;
 			default:
 				throw std::invalid_argument("Unsupported baud rate");
@@ -84,38 +84,38 @@ namespace DroidWire {
 		}
 
 		switch (std::get<BaudRate>(setting)) {
-			case BaudRate::B110:
+			case BaudRate::Baud110:
 				return B110;
-			case BaudRate::B300:
+			case BaudRate::Baud300:
 				return B300;
-			case BaudRate::B600:
+			case BaudRate::Baud600:
 				return B600;
-			case BaudRate::B1200:
+			case BaudRate::Baud1200:
 				return B1200;
-			case BaudRate::B2400:
+			case BaudRate::Baud2400:
 				return B2400;
-			case BaudRate::B4800:
+			case BaudRate::Baud4800:
 				return B4800;
-			case BaudRate::B9600:
+			case BaudRate::Baud9600:
 				return B9600;
-			case BaudRate::B19200:
+			case BaudRate::Baud19200:
 				return B19200;
-			case BaudRate::B38400:
+			case BaudRate::Baud38400:
 				return B38400;
-			case BaudRate::B57600:
+			case BaudRate::Baud57600:
 				return B57600;
-			case BaudRate::B115200:
+			case BaudRate::Baud115200:
 				return B115200;
 #ifdef B230400
-			case BaudRate::B230400:
+			case BaudRate::Baud230400:
 				return B230400;
 #endif
 #ifdef B460800
-			case BaudRate::B460800:
+			case BaudRate::Baud460800:
 				return B460800;
 #endif
 #ifdef B921600
-			case BaudRate::B921600:
+			case BaudRate::Baud921600:
 				return B921600;
 #endif
 			default:
@@ -263,7 +263,7 @@ namespace DroidWire {
 			o.fd_ = -1;
 			async_ = o.async_;
 		}
-		t return *this;
+		return *this;
 	}
 #endif
 
@@ -337,39 +337,39 @@ namespace DroidWire {
 	// Convert a BaudRate enum to its numeric string representation
 	std::string to_string(BaudRate rate) {
 		switch (rate) {
-			case BaudRate::B110:
+			case BaudRate::Baud110:
 				return "110";
-			case BaudRate::B300:
+			case BaudRate::Baud300:
 				return "300";
-			case BaudRate::B600:
+			case BaudRate::Baud600:
 				return "600";
-			case BaudRate::B1200:
+			case BaudRate::Baud1200:
 				return "1200";
-			case BaudRate::B2400:
+			case BaudRate::Baud2400:
 				return "2400";
-			case BaudRate::B4800:
+			case BaudRate::Baud4800:
 				return "4800";
-			case BaudRate::B9600:
+			case BaudRate::Baud9600:
 				return "9600";
-			case BaudRate::B14400:
+			case BaudRate::Baud14400:
 				return "14400";
-			case BaudRate::B19200:
+			case BaudRate::Baud19200:
 				return "19200";
-			case BaudRate::B38400:
+			case BaudRate::Baud38400:
 				return "38400";
-			case BaudRate::B57600:
+			case BaudRate::Baud57600:
 				return "57600";
-			case BaudRate::B115200:
+			case BaudRate::Baud115200:
 				return "115200";
-			case BaudRate::B128000:
+			case BaudRate::Baud128000:
 				return "128000";
-			case BaudRate::B230400:
+			case BaudRate::Baud230400:
 				return "230400";
-			case BaudRate::B256000:
+			case BaudRate::Baud256000:
 				return "256000";
-			case BaudRate::B460800:
+			case BaudRate::Baud460800:
 				return "460800";
-			case BaudRate::B921600:
+			case BaudRate::Baud921600:
 				return "921600";
 			default:
 				return "Unknown";
