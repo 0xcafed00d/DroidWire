@@ -17,8 +17,8 @@ int main(int argc, char** argv) {
 	DroidWire::SerialConfig config;
 	config.device = device;
 	config.baudRate = DroidWire::BaudRate::Baud300;
-	config.timeout = std::chrono::milliseconds(0);
-	config.async = true;
+	config.timeout = std::chrono::milliseconds(10000);
+	config.async = false;
 
 	try {
 		DroidWire::SerialPort serial(config);
@@ -40,6 +40,9 @@ int main(int argc, char** argv) {
 
 		std::byte buffer[256];
 		std::span<std::byte> bufferSpan(buffer, sizeof(buffer));
+
+		// pause briefly to allow data to arrive
+		std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
 		// time how long the read takes
 		start = std::chrono::high_resolution_clock::now();

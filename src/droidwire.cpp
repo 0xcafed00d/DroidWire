@@ -321,10 +321,10 @@ namespace DroidWire {
 			FD_SET(fd_, &set);
 			timeval tv{};
 			tv.tv_sec = 0;
-			tv.tv_usec = 100000;  // 100ms poll interval
+			tv.tv_usec = 0;
 			int rv = select(fd_ + 1, &set, nullptr, nullptr, &tv);
 			if (rv <= 0)
-				return buffer.first(0);
+				return buffer.first(0);  // return zero bytes read
 		}
 
 		ssize_t bytesRead = ::read(fd_, buffer.data(), buffer.size());
