@@ -47,7 +47,7 @@ namespace DroidWire {
 		StopBits stopBits = StopBits::One;
 		FlowControl flowControl = FlowControl::None;
 		std::chrono::milliseconds timeout = std::chrono::milliseconds{1000};
-		bool async = false;
+		bool non_blocking = false;
 	};
 
 	class SerialPort {
@@ -64,12 +64,12 @@ namespace DroidWire {
 		std::span<std::byte> read(std::span<std::byte> buffer);
 
 	   private:
-		bool async_ = false;
+		bool non_blocking = false;
 
 #ifdef _WIN32
-		void* handle_ = nullptr;  // HANDLE
+		void* handle = nullptr;  // HANDLE
 #else
-		int fd_ = -1;
+		int fd = -1;
 #endif
 	};
 

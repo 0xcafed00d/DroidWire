@@ -127,20 +127,20 @@ namespace DroidWire {
 	// ------------------ SerialPort constructor ------------------
 #ifdef _WIN32
 	SerialPort::SerialPort(const SerialConfig& cfg) {
-		async_ = cfg.async;
+		non_blocking = cfg.non_blocking;
 
 		std::wstring wdevice(cfg.device.begin(), cfg.device.end());
-		DWORD flags = cfg.async ? FILE_FLAG_OVERLAPPED : 0;
+		DWORD flags = cfg.non_blocking ? FILE_FLAG_OVERLAPPED : 0;
 
-		handle_ = CreateFileW(wdevice.c_str(), GENERIC_READ | GENERIC_WRITE, 0, nullptr,
-		                      OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | flags, nullptr);
-		if (handle_ == INVALID_HANDLE_VALUE)
+		handle = CreateFileW(wdevice.c_str(), GENERIC_READ | GENERIC_WRITE, 0, nullptr,
+		                     OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | flags, nullptr);
+		if (handle == INVALID_HANDLE_VALUE)
 			throw std::system_error(GetLastError(), std::system_category(),
 			                        "Failed to open serial port");
 
 		DCB dcb{};
 		dcb.DCBlength = sizeof(dcb);
-		if (!GetCommState(handle_, &dcb))
+		if (!GetCommState(handle, &dcb))
 			throw std::system_error(GetLastError(), std::system_category(), "GetCommState failed");
 
 		dcb.BaudRate = toWindowsBaud(cfg.baudRate);
@@ -156,24 +156,24 @@ namespace DroidWire {
 		dcb.fOutX = (cfg.flowControl == FlowControl::Software);
 		dcb.fInX = (cfg.flowControl == FlowControl::Software);
 
-		if (!SetCommState(handle_, &dcb))
+		if (!SetCommState(handle, &dcb))
 			throw std::system_error(GetLastError(), std::system_category(), "SetCommState failed");
 
 		COMMTIMEOUTS timeouts{};
 		timeouts.ReadIntervalTimeout = (DWORD)cfg.timeout.count();
 		timeouts.ReadTotalTimeoutConstant = (DWORD)cfg.timeout.count();
-		SetCommTimeouts(handle_, &timeouts);
+		SetCommTimeouts(handle, &timeouts);
 	}
 
 #else
 	SerialPort::SerialPort(const SerialConfig& cfg) {
-		async_ = cfg.async;
-		fd_ = open(cfg.device.c_str(), O_RDWR | O_NOCTTY | O_SYNC);
-		if (fd_ < 0)
+		non_blocking = cfg.non_blocking;
+		fd = open(cfg.device.c_str(), O_RDWR | O_NOCTTY | O_SYNC);
+		if (fd < 0)
 			throw std::system_error(errno, std::generic_category(), "Failed to open serial port");
 
-		if (cfg.async)
-			fcntl(fd_, F_SETFL, O_NONBLOCK);
+		if (cfg.non_blocking)
+			fcntl(fd, F_SETFL, O_NONBLOCK);
 
 #ifdef BOTHER
 		// Try modern Linux path (termios2 with BOTHER)
@@ -202,7 +202,7 @@ namespace DroidWire {
 		{
 			// Fallback: legacy termios (no BOTHER)
 			termios tty{};
-			if (tcgetattr(fd_, &tty) != 0)
+			if (tcgetattr(fd, &tty) != 0)
 				throw std::system_error(errno, std::generic_category(), "tcgetattr failed");
 
 			speed_t baud = toPosixBaud(cfg.baudRate);
@@ -212,7 +212,7 @@ namespace DroidWire {
 			tty.c_cflag = (tty.c_cflag & ~CSIZE) | CS8 | CLOCAL | CREAD;
 			tty.c_iflag = tty.c_oflag = tty.c_lflag = 0;
 
-			if (tcsetattr(fd_, TCSANOW, &tty) != 0)
+			if (tcsetattr(fd, TCSANOW, &tty) != 0)
 				throw std::system_error(errno, std::generic_category(), "tcsetattr failed");
 		}
 	}
@@ -220,28 +220,28 @@ namespace DroidWire {
 
 #ifdef _WIN32
 	SerialPort::~SerialPort() {
-		if (handle_ && handle_ != INVALID_HANDLE_VALUE)
-			CloseHandle(handle_);
+		if (handle && handle != INVALID_HANDLE_VALUE)
+			CloseHandle(handle);
 	}
 
 #else
 	SerialPort::~SerialPort() {
-		if (fd_ >= 0)
-			close(fd_);
+		if (fd >= 0)
+			close(fd);
 	}
 #endif
 
 #ifdef _WIN32
 	SerialPort::SerialPort(SerialPort&& o) noexcept {
-		handle_ = o.handle_;
-		o.handle_ = nullptr;
-		async_ = o.async_;
+		handle = o.handle;
+		o.handle = nullptr;
+		non_blocking = o.non_blocking;
 	}
 #else
 	SerialPort::SerialPort(SerialPort&& o) noexcept {
-		fd_ = o.fd_;
-		o.fd_ = -1;
-		async_ = o.async_;
+		fd = o.fd;
+		o.fd = -1;
+		non_blocking = o.non_blocking;
 	}
 #endif
 
@@ -249,9 +249,9 @@ namespace DroidWire {
 	SerialPort& SerialPort::operator=(SerialPort&& o) noexcept {
 		if (this != &o) {
 			this->~SerialPort();
-			handle_ = o.handle_;
-			o.handle_ = nullptr;
-			async_ = o.async_;
+			handle = o.handle;
+			o.handle = nullptr;
+			non_blocking = o.non_blocking;
 		}
 		return *this;
 	}
@@ -259,9 +259,9 @@ namespace DroidWire {
 	SerialPort& SerialPort::operator=(SerialPort&& o) noexcept {
 		if (this != &o) {
 			this->~SerialPort();
-			fd_ = o.fd_;
-			o.fd_ = -1;
-			async_ = o.async_;
+			fd = o.fd;
+			o.fd = -1;
+			non_blocking = o.non_blocking;
 		}
 		return *this;
 	}
@@ -271,23 +271,23 @@ namespace DroidWire {
 #ifdef _WIN32
 		DWORD written{0};
 
-		if (async_) {
+		if (non_blocking) {
 			OVERLAPPED ovl{};
 			ZeroMemory(&ovl, sizeof(ovl));
 
-			if (!WriteFile(handle_, data.data(), (DWORD)data.size(), &written, &ovl)) {
+			if (!WriteFile(handle, data.data(), (DWORD)data.size(), &written, &ovl)) {
 				if (GetLastError() != ERROR_IO_PENDING)
 					throw std::system_error(GetLastError(), std::system_category(),
 					                        "WriteFile failed");
 			}
 
 		} else {
-			if (!WriteFile(handle_, data.data(), (DWORD)data.size(), &written, nullptr))
+			if (!WriteFile(handle, data.data(), (DWORD)data.size(), &written, nullptr))
 				throw std::system_error(GetLastError(), std::system_category(), "WriteFile failed");
 		}
 		return data.subspan(0, written);
 #else
-		ssize_t ret = ::write(fd_, data.data(), data.size());
+		ssize_t ret = ::write(fd, data.data(), data.size());
 		if (ret < 0 && errno != EAGAIN)
 			throw std::system_error(errno, std::generic_category(), "write failed");
 		return data.first(static_cast<std::size_t>(std::max<ssize_t>(0, ret)));
@@ -297,16 +297,16 @@ namespace DroidWire {
 #ifdef _WIN32
 	std::span<std::byte> SerialPort::read(std::span<std::byte> buffer) {
 		DWORD bytesRead = 0;
-		if (async_) {
+		if (non_blocking) {
 			OVERLAPPED ovl{};
 			ZeroMemory(&ovl, sizeof(ovl));
-			if (!ReadFile(handle_, buffer.data(), (DWORD)buffer.size(), &bytesRead, &ovl)) {
+			if (!ReadFile(handle, buffer.data(), (DWORD)buffer.size(), &bytesRead, &ovl)) {
 				if (GetLastError() != ERROR_IO_PENDING)
 					throw std::system_error(GetLastError(), std::system_category(),
 					                        "ReadFile failed");
 			}
 		} else {
-			if (!ReadFile(handle_, buffer.data(), (DWORD)buffer.size(), &bytesRead, nullptr))
+			if (!ReadFile(handle, buffer.data(), (DWORD)buffer.size(), &bytesRead, nullptr))
 				throw std::system_error(GetLastError(), std::system_category(), "ReadFile failed");
 		}
 		return buffer.first(bytesRead);
@@ -315,19 +315,19 @@ namespace DroidWire {
 #else
 
 	std::span<std::byte> SerialPort::read(std::span<std::byte> buffer) {
-		if (async_) {
+		if (non_blocking) {
 			fd_set set;
 			FD_ZERO(&set);
-			FD_SET(fd_, &set);
+			FD_SET(fd, &set);
 			timeval tv{};
 			tv.tv_sec = 0;
 			tv.tv_usec = 0;
-			int rv = select(fd_ + 1, &set, nullptr, nullptr, &tv);
+			int rv = select(fd + 1, &set, nullptr, nullptr, &tv);
 			if (rv <= 0)
 				return buffer.first(0);  // return zero bytes read
 		}
 
-		ssize_t bytesRead = ::read(fd_, buffer.data(), buffer.size());
+		ssize_t bytesRead = ::read(fd, buffer.data(), buffer.size());
 		if (bytesRead < 0 && errno != EAGAIN)
 			throw std::system_error(errno, std::generic_category(), "read failed");
 		return buffer.first(static_cast<std::size_t>(std::max<ssize_t>(0, bytesRead)));

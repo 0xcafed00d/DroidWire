@@ -18,7 +18,7 @@ int main(int argc, char** argv) {
 	config.device = device;
 	config.baudRate = DroidWire::BaudRate::Baud300;
 	config.timeout = std::chrono::milliseconds(10000);
-	config.async = false;
+	config.non_blocking = false;
 
 	try {
 		DroidWire::SerialPort serial(config);
