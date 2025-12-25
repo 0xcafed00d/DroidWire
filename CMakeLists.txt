@@ -12,6 +12,7 @@ option(DROIDWIRE_BUILD_TESTS "Build test executable" OFF)
 add_library(droidwire STATIC
     include/droidwire/droidwire.h
     include/droidwire/buffer.h
+    src/buffer.cpp
     src/droidwire.cpp
 )
 
